@@ -1,0 +1,44 @@
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        setLoading(true);
+        const itinerary_id = id || localStorage.getItem(ITINERARY_STORAGE_KEY);
+        const url = itinerary_id
+          ? apiUrl("/createItinerary/${itinerary_id}")
+          : apiUrl('/createItinerary');
+        
+        const res = await axios.get(url, { withCredentials: true });
+        
+        if (res.data.id) {
+          setCurrentItineraryId(res.data.id);
+        }
+        
+        setWeather(res.data.weatherData);
+        setItineraryData(res.data.itinerary);
+        setLocalGuide(res.data.localGuide || null);
+        setPlacePhotos(res.data.placePhotos || []);
+        setHotels(res.data.hotels || []);
+        setExplorePlaces(res.data.explorePlaces || null);
+
+        if (res.data.weatherPerDay && res.data.weatherPerDay.length > 0) {
+          setWeatherForecast(res.data.weatherPerDay.map(w => ({
+            date: w.date,
+            temperature: { min: w.minTemp ?? "-", max: w.maxTemp ?? "-" },
+            condition: w.condition || "-",
+            humidity: w.avgHumidity ?? "-",
+            wind_speed: "-"
+          })));
+        }
+
+        if (res.data.itinerary && res.data.itinerary.tripOverview) {
+          setTripOverview(res.data.itinerary.tripOverview);
+        }
+      } catch (error) {
+        console.log("Frontend Error:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchData();
+    localStorage.removeItem(ITINERARY_STORAGE_KEY);
+  }, [id]);
